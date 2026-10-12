@@ -1,0 +1,21 @@
+customer_id,gender,tenure,monthly_charges,total_charges,contract_type,payment_method,churn
+CUST101,Female,12,65.5,786.0,Month-to-month,Electronic check,1
+CUST102,Male,34,50.2,1706.8,One year,Mailed check,0
+CUST103,Male,2,75.0,150.0,Month-to-month,Electronic check,1
+CUST104,Female,45,40.1,1804.5,Two year,Bank transfer,0
+CUST105,Female,8,85.2,681.6,Month-to-month,Electronic check,1
+CUST106,Male,60,95.0,5700.0,Two year,Credit card,0
+CUST107,Male,18,70.5,1269.0,Month-to-month,Mailed check,0
+CUST108,Female,3,80.0,240.0,Month-to-month,Electronic check,1
+CUST109,Male,52,60.4,3140.8,One year,Bank transfer,0
+CUST110,Female,24,90.1,2162.4,Month-to-month,Credit card,1
+CUST111,Female,48,45.0,2160.0,Two year,Mailed check,0
+CUST112,Male,6,72.3,433.8,Month-to-month,Electronic check,1
+CUST113,Male,30,85.0,2550.0,One year,Bank transfer,0
+CUST114,Female,1,69.0,69.0,Month-to-month,Electronic check,1
+CUST115,Female,64,105.0,6720.0,Two year,Credit card,0
+CUST116,Male,15,55.2,828.0,Month-to-month,Mailed check,0
+CUST117,Female,4,78.9,315.6,Month-to-month,Electronic check,1
+CUST118,Male,38,62.1,2359.8,One year,Bank transfer,0
+CUST119,Female,22,88.4,1944.8,Month-to-month,Credit card,0
+CUST120,Male,70,110.5,7735.0,Two year,Credit card,0
