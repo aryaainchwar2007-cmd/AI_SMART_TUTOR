@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./storage/ai_smart_tutor.db"
 
     # CORS
-    CORS_ORIGINS: list[str] = [
+    CORS_ORIGINS: list[str] | str = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
@@ -36,10 +36,18 @@ class Settings(BaseSettings):
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
-        if isinstance(v, str) and not v.startswith("["):
+    def assemble_cors_origins(cls, v: object) -> list[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
             return [i.strip() for i in v.split(",") if i.strip()]
-        return v
+        elif isinstance(v, list):
+            return [str(i) for i in v]
+        return []
 
     # Storage paths (outside public web directory)
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
@@ -58,25 +66,38 @@ class Settings(BaseSettings):
     RATE_LIMIT_AI_PER_MINUTE: int = 30
     RATE_LIMIT_UPLOAD_PER_MINUTE: int = 15
 
-    # LLM Settings
-    LLM_PROVIDER: str = "mock"  # "mock", "gemini", "openai", "ollama"
+    # LLM Settings ("deepseek", "gemini", "openai", "mock")
+    LLM_PROVIDER: str = "deepseek"
     LLM_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
-    LLM_MODEL: str = "gemini-1.5-flash"
-    LLM_TIMEOUT_SECONDS: float = 30.0
+    DEEPSEEK_API_KEY: str = ""
+    DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
+    LLM_MODEL: str = "deepseek-chat"
+    LLM_TIMEOUT_SECONDS: float = 35.0
     LLM_MAX_RETRIES: int = 2
 
     @property
     def effective_api_key(self) -> str:
-        return (self.LLM_API_KEY or self.GEMINI_API_KEY or "").strip()
+        return (self.DEEPSEEK_API_KEY or self.LLM_API_KEY or self.GEMINI_API_KEY or "").strip()
 
     @property
     def effective_provider(self) -> str:
         key = self.effective_api_key
-        # Automatically promote to gemini if a key is provided and provider was default mock
-        if key and self.LLM_PROVIDER == "mock":
+        prov = self.LLM_PROVIDER.lower().strip()
+        if self.DEEPSEEK_API_KEY or prov == "deepseek":
+            return "deepseek"
+        if key and prov == "mock":
+            if key.startswith("sk-"):
+                return "deepseek"
             return "gemini"
-        return self.LLM_PROVIDER.lower()
+        return prov
+
+    @property
+    def effective_model(self) -> str:
+        if self.effective_provider == "deepseek":
+            if not self.LLM_MODEL or self.LLM_MODEL == "gemini-1.5-flash":
+                return "deepseek-chat"
+        return self.LLM_MODEL or "deepseek-chat"
 
 
 settings = Settings()

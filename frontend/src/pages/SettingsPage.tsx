@@ -25,9 +25,10 @@ export const SettingsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Gemini Key settings state
-  const [geminiKey, setGeminiKey] = useState('');
-  const [geminiModel, setGeminiModel] = useState('gemini-1.5-flash');
+  // AI Provider Key settings state
+  const [selectedProvider, setSelectedProvider] = useState<'deepseek' | 'gemini'>('deepseek');
+  const [apiKey, setApiKey] = useState('');
+  const [selectedModel, setSelectedModel] = useState('deepseek-chat');
   const [savingKey, setSavingKey] = useState(false);
   const [providerStatus, setProviderStatus] = useState<any>(null);
 
@@ -35,34 +36,46 @@ export const SettingsPage: React.FC = () => {
     api.get<any>('/conversations/provider/status')
       .then((data) => {
         setProviderStatus(data);
-        if (data.model) setGeminiModel(data.model);
+        if (data.provider === 'gemini' || data.provider === 'deepseek') {
+          setSelectedProvider(data.provider);
+        }
+        if (data.model) setSelectedModel(data.model);
       })
       .catch(() => null);
   }, []);
 
-  const handleGeminiKeyUpdate = async (e: React.FormEvent) => {
+  const handleProviderChange = (newProvider: 'deepseek' | 'gemini') => {
+    setSelectedProvider(newProvider);
+    if (newProvider === 'deepseek') {
+      setSelectedModel('deepseek-chat');
+    } else {
+      setSelectedModel('gemini-1.5-flash');
+    }
+  };
+
+  const handleProviderKeyUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!geminiKey.trim()) return;
+    if (!apiKey.trim()) return;
     setSavingKey(true);
     setError(null);
     setSuccess(null);
     try {
       const res = await api.post<any>('/conversations/provider/configure', {
-        api_key: geminiKey.trim(),
-        model: geminiModel,
-        provider: 'gemini',
+        api_key: apiKey.trim(),
+        model: selectedModel,
+        provider: selectedProvider,
       });
-      setSuccess('Google Gemini AI activated successfully! AI Tutor is now live.');
+      setSuccess(`${selectedProvider === 'deepseek' ? 'DeepSeek AI' : 'Google Gemini'} activated successfully! AI Tutor is now live.`);
       setProviderStatus({
         provider: res.provider,
         model: res.model,
         has_api_key: true,
-        masked_key: `${geminiKey.trim().slice(0, 4)}...${geminiKey.trim().slice(-4)}`,
+        masked_key: `${apiKey.trim().slice(0, 4)}...${apiKey.trim().slice(-4)}`,
         is_live: true,
       });
-      setGeminiKey('');
+      setApiKey('');
     } catch (err: any) {
-      setError(err.message || 'Failed to update Gemini settings.');
+      setError(err.message || 'Failed to update AI provider settings.');
     } finally {
       setSavingKey(false);
     }
@@ -218,7 +231,7 @@ export const SettingsPage: React.FC = () => {
         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
           <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-2">
             <Zap className="h-4 w-4 text-blue-600" />
-            <span>AI Tutor Provider & Google Gemini Integration</span>
+            <span>AI Tutor Provider & Dynamic Intelligence</span>
           </h3>
           <span
             className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
@@ -227,63 +240,119 @@ export const SettingsPage: React.FC = () => {
                 : 'bg-amber-50 text-amber-800 border border-amber-200'
             }`}
           >
-            {providerStatus?.is_live ? `Live (${providerStatus.model})` : 'Offline Mock Mode'}
+            {providerStatus?.is_live
+              ? `Live: ${(providerStatus.provider || 'AI').toUpperCase()} (${providerStatus.model})`
+              : 'Offline Mock Mode'}
           </span>
         </div>
 
         <p className="text-xs text-slate-600 leading-relaxed">
-          The AI Tutor connects with Google Gemini to generate dynamic, Socratic explanations and customized code suggestions.
-          You can get a free API key from{' '}
-          <a
-            href="https://aistudio.google.com/app/apikey"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 font-bold hover:underline inline-flex items-center"
-          >
-            <span>Google AI Studio</span>
-            <ExternalLink className="h-3 w-3 ml-1" />
-          </a>
-          .
+          The AI Tutor uses real-time LLM intelligence to deliver Socratic explanations, line-by-line Python guidance, and viva preparation.
+          Select your preferred AI provider below:
         </p>
 
-        <form onSubmit={handleGeminiKeyUpdate} className="space-y-4 max-w-lg">
+        {/* Provider Switcher Tabs */}
+        <div className="grid grid-cols-2 gap-3 max-w-lg">
+          <button
+            type="button"
+            onClick={() => handleProviderChange('deepseek')}
+            className={`p-3 rounded-xl border text-left transition flex flex-col ${
+              selectedProvider === 'deepseek'
+                ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20'
+                : 'border-slate-200 hover:border-slate-300 bg-slate-50'
+            }`}
+          >
+            <span className="font-bold text-xs text-slate-900">DeepSeek AI</span>
+            <span className="text-[11px] text-slate-500 mt-0.5">deepseek-chat / reasoner</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleProviderChange('gemini')}
+            className={`p-3 rounded-xl border text-left transition flex flex-col ${
+              selectedProvider === 'gemini'
+                ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20'
+                : 'border-slate-200 hover:border-slate-300 bg-slate-50'
+            }`}
+          >
+            <span className="font-bold text-xs text-slate-900">Google Gemini</span>
+            <span className="text-[11px] text-slate-500 mt-0.5">gemini-1.5-flash / pro</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleProviderKeyUpdate} className="space-y-4 max-w-lg">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Google Gemini API Key
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-xs font-semibold text-slate-700">
+                {selectedProvider === 'deepseek' ? 'DeepSeek API Key' : 'Google Gemini API Key'}
+              </label>
+              {selectedProvider === 'deepseek' ? (
+                <a
+                  href="https://platform.deepseek.com/api_keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-blue-600 hover:underline inline-flex items-center"
+                >
+                  <span>Get DeepSeek Key</span>
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+              ) : (
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-blue-600 hover:underline inline-flex items-center"
+                >
+                  <span>Get Gemini Key</span>
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+              )}
+            </div>
             <input
               type="password"
               placeholder={
-                providerStatus?.has_api_key
-                  ? `Active Key: ${providerStatus.masked_key}`
-                  : 'Paste AIzaSy... key'
+                providerStatus?.has_api_key && providerStatus?.provider === selectedProvider
+                  ? `Active: ${providerStatus.masked_key}`
+                  : selectedProvider === 'deepseek'
+                  ? 'sk-...'
+                  : 'AIzaSy...'
               }
-              value={geminiKey}
-              onChange={(e) => setGeminiKey(e.target.value)}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">Model Selection</label>
-            <select
-              value={geminiModel}
-              onChange={(e) => setGeminiModel(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800"
-            >
-              <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast, Recommended)</option>
-              <option value="gemini-2.0-flash">Gemini 2.0 Flash (Next-Gen)</option>
-              <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Multi-turn)</option>
-            </select>
+            {selectedProvider === 'deepseek' ? (
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800"
+              >
+                <option value="deepseek-chat">deepseek-chat (DeepSeek-V3 - Fast & Highly Capable)</option>
+                <option value="deepseek-reasoner">deepseek-reasoner (DeepSeek-R1 - Deep Reasoning)</option>
+              </select>
+            ) : (
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800"
+              >
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast, Recommended)</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Next-Gen)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Multi-turn)</option>
+              </select>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={savingKey || !geminiKey.trim()}
+            disabled={savingKey || !apiKey.trim()}
             className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-xl text-xs shadow-sm transition"
           >
             <Check className="h-3.5 w-3.5" />
-            <span>{savingKey ? 'Connecting...' : 'Save & Activate Gemini'}</span>
+            <span>{savingKey ? 'Connecting...' : `Save & Activate ${selectedProvider === 'deepseek' ? 'DeepSeek' : 'Gemini'}`}</span>
           </button>
         </form>
       </div>

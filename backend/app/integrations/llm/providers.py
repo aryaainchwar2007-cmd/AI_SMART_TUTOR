@@ -124,6 +124,65 @@ class OpenAIProvider(LLMProvider):
             return data["choices"][0]["message"]["content"]
 
 
+class DeepSeekProvider(LLMProvider):
+    def __init__(self, api_key: str, model: str = "deepseek-chat", base_url: str = "https://api.deepseek.com"):
+        self.api_key = api_key
+        self.model = model or "deepseek-chat"
+        self.base_url = base_url.rstrip("/")
+
+    async def generate_response(
+        self,
+        system_instruction: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: int = 1500,
+    ) -> str:
+        formatted = [{"role": "system", "content": system_instruction}]
+        for m in messages:
+            role = "user" if m.get("role") == "user" else "assistant"
+            content = (m.get("content") or "").strip()
+            if content:
+                formatted.append({"role": role, "content": content})
+
+        payload = {
+            "model": self.model,
+            "messages": formatted,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        endpoints = [
+            f"{self.base_url}/chat/completions",
+            f"{self.base_url}/v1/chat/completions",
+        ]
+
+        last_error = None
+        async with httpx.AsyncClient(timeout=settings.LLM_TIMEOUT_SECONDS) as client:
+            for url in endpoints:
+                try:
+                    resp = await client.post(url, json=payload, headers=headers)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        choices = data.get("choices", [])
+                        if choices and "message" in choices[0]:
+                            return choices[0]["message"].get("content", "")
+                        return "I received your query, but no response was returned by DeepSeek."
+                    else:
+                        err_text = resp.text
+                        logger.warning(f"DeepSeek API error ({resp.status_code}): {err_text}")
+                        last_error = f"DeepSeek API Error ({resp.status_code}): {err_text[:200]}"
+                except Exception as ex:
+                    logger.warning(f"Connection exception to DeepSeek ({url}): {ex}")
+                    last_error = str(ex)
+
+        raise RuntimeError(last_error or "DeepSeek API failed to respond.")
+
+
 class OfflineEducatorProvider(LLMProvider):
     """Offline academic tutor engine providing grounded feedback, code examples,
     and viva questions even without external API keys.
@@ -232,10 +291,12 @@ def get_llm_provider() -> LLMProvider:
     provider_name = settings.effective_provider
     api_key = settings.effective_api_key
 
-    if provider_name == "gemini" and api_key:
-        return GeminiProvider(api_key=api_key, model=settings.LLM_MODEL)
+    if provider_name == "deepseek" and api_key:
+        return DeepSeekProvider(api_key=api_key, model=settings.effective_model, base_url=settings.DEEPSEEK_BASE_URL)
+    elif provider_name == "gemini" and api_key:
+        return GeminiProvider(api_key=api_key, model=settings.effective_model)
     elif provider_name == "openai" and api_key:
-        return OpenAIProvider(api_key=api_key, model=settings.LLM_MODEL)
+        return OpenAIProvider(api_key=api_key, model=settings.effective_model)
     else:
         # Default resilient academic tutor
         return OfflineEducatorProvider()

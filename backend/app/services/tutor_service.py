@@ -2,6 +2,7 @@ import json
 from datetime import UTC, datetime
 from uuid import UUID
 
+from app.core.config import settings
 from app.db.models.entities import Conversation, Message, MLModel, User
 from app.integrations.llm.providers import OfflineEducatorProvider, get_llm_provider
 from app.schemas.tutor import MessageCreate
@@ -125,9 +126,9 @@ class TutorService:
                 messages=history,
             )
             if settings.effective_api_key:
-                reply_text += f"\n\n*(Note: Live AI provider encountered an issue [{str(e)[:140]}]; served via offline educational tutor. Check your Gemini API key.)*"
+                reply_text += f"\n\n*(Note: Live {settings.effective_provider.upper()} provider encountered an issue [{str(e)[:160]}]; served via offline educational tutor. Please verify your API key or network connection.)*"
             else:
-                reply_text += "\n\n*(Note: Running in offline educational mode with static templates. Connect a free Google Gemini API key to unlock fully dynamic, generative AI tutoring!)*"
+                reply_text += "\n\n*(Note: Running in offline educational mode with static templates. Connect your DeepSeek or Google Gemini API key to unlock fully dynamic, generative AI tutoring!)*"
 
         # Save assistant message
         assistant_msg = Message(

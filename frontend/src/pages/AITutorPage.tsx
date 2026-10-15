@@ -40,11 +40,12 @@ export const AITutorPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Gemini Provider State
+  // AI Provider State (DeepSeek, Gemini, etc.)
   const [providerStatus, setProviderStatus] = useState<ProviderStatus | null>(null);
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
+  const [selectedProvider, setSelectedProvider] = useState<string>('deepseek');
   const [apiKeyInput, setApiKeyInput] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-1.5-flash');
+  const [selectedModel, setSelectedModel] = useState<string>('deepseek-chat');
   const [savingConfig, setSavingConfig] = useState<boolean>(false);
   const [configSuccess, setConfigSuccess] = useState<string | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
@@ -72,7 +73,8 @@ export const AITutorPage: React.FC = () => {
         setDatasets(dsData);
         if (pStatus) {
           setProviderStatus(pStatus);
-          setSelectedModel(pStatus.model || 'gemini-1.5-flash');
+          setSelectedProvider(pStatus.provider || 'deepseek');
+          setSelectedModel(pStatus.model || 'deepseek-chat');
         }
         if (convData.length > 0) {
           setActiveConvId(convData[0].id);
@@ -100,9 +102,9 @@ export const AITutorPage: React.FC = () => {
       const res = await api.post<any>('/conversations/provider/configure', {
         api_key: apiKeyInput.trim(),
         model: selectedModel,
-        provider: 'gemini',
+        provider: selectedProvider,
       });
-      setConfigSuccess('Successfully connected to Google Gemini!');
+      setConfigSuccess(`Successfully connected to ${selectedProvider.toUpperCase()} AI!`);
       setProviderStatus({
         provider: res.provider,
         model: res.model,
@@ -116,7 +118,7 @@ export const AITutorPage: React.FC = () => {
         setApiKeyInput('');
       }, 1200);
     } catch (err: any) {
-      setConfigError(err.message || 'Failed to configure Gemini provider.');
+      setConfigError(err.message || 'Failed to configure AI provider.');
     } finally {
       setSavingConfig(false);
     }
@@ -431,8 +433,8 @@ export const AITutorPage: React.FC = () => {
                   <Zap className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-slate-900">Google Gemini Live AI</h3>
-                  <p className="text-xs text-slate-500">Enable dynamic, generative tutoring</p>
+                  <h3 className="font-bold text-base text-slate-900">AI Tutor Engine Settings</h3>
+                  <p className="text-xs text-slate-500">DeepSeek AI & Google Gemini Integration</p>
                 </div>
               </div>
               <button
@@ -446,20 +448,31 @@ export const AITutorPage: React.FC = () => {
             <div className="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 text-xs text-blue-900 space-y-1.5">
               <p className="font-semibold flex items-center text-blue-950">
                 <Sparkles className="h-3.5 w-3.5 mr-1 text-blue-600 shrink-0" />
-                How to make your chatbot dynamic:
+                Live AI Providers Supported:
               </p>
               <p className="text-slate-600 leading-relaxed">
-                Connect your <b>free Google Gemini API key</b> to unlock real-time code explanations, Socratic hints, and interactive viva questions tailored directly to your datasets.
+                Connect your <b>DeepSeek API key</b> or <b>Google Gemini API key</b> to unlock real-time code explanations, Socratic hints, and interactive viva questions tailored directly to your datasets.
               </p>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-blue-700 font-bold hover:underline pt-1 text-[11px]"
-              >
-                <span>Get a free key from Google AI Studio</span>
-                <ExternalLink className="h-3 w-3 ml-1" />
-              </a>
+              <div className="flex items-center space-x-4 pt-1 text-[11px]">
+                <a
+                  href="https://platform.deepseek.com/api_keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-700 font-bold hover:underline inline-flex items-center"
+                >
+                  <span>DeepSeek Platform</span>
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-700 font-bold hover:underline inline-flex items-center"
+                >
+                  <span>Google AI Studio</span>
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+              </div>
             </div>
 
             {configSuccess && (
@@ -479,14 +492,34 @@ export const AITutorPage: React.FC = () => {
             <form onSubmit={handleSaveProviderConfig} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Google Gemini API Key
+                  AI Provider Engine
+                </label>
+                <select
+                  value={selectedProvider}
+                  onChange={(e) => {
+                    const prov = e.target.value;
+                    setSelectedProvider(prov);
+                    setSelectedModel(prov === 'deepseek' ? 'deepseek-chat' : 'gemini-1.5-flash');
+                  }}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 font-semibold"
+                >
+                  <option value="deepseek">DeepSeek AI (Recommended)</option>
+                  <option value="gemini">Google Gemini</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {selectedProvider === 'deepseek' ? 'DeepSeek API Key' : 'Gemini API Key'}
                 </label>
                 <input
                   type="password"
                   placeholder={
-                    providerStatus?.has_api_key
+                    providerStatus?.has_api_key && providerStatus.provider === selectedProvider
                       ? `Active: ${providerStatus.masked_key}`
-                      : 'Paste AIzaSy... key here'
+                      : selectedProvider === 'deepseek'
+                      ? 'sk-...'
+                      : 'AIzaSy...'
                   }
                   value={apiKeyInput}
                   onChange={(e) => setApiKeyInput(e.target.value)}
@@ -496,17 +529,28 @@ export const AITutorPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Select Gemini Model
+                  Model Selection
                 </label>
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800"
-                >
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast, Recommended)</option>
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (Next-Gen)</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Multi-turn)</option>
-                </select>
+                {selectedProvider === 'deepseek' ? (
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800"
+                  >
+                    <option value="deepseek-chat">deepseek-chat (DeepSeek-V3 - Fast & Powerful)</option>
+                    <option value="deepseek-reasoner">deepseek-reasoner (DeepSeek-R1 - Deep Reasoning)</option>
+                  </select>
+                ) : (
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800"
+                  >
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast, Recommended)</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (Next-Gen)</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Multi-turn)</option>
+                  </select>
+                )}
               </div>
 
               <div className="flex items-center justify-between pt-2">
