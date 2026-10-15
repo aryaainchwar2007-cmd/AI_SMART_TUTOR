@@ -401,6 +401,11 @@ def build_architecture_pdf(output_path: str):
             Paragraph("Metrics overview, owned datasets, recent runs, models, quick actions.", style_table_cell)
         ],
         [
+            Paragraph("Python Code Lab", style_table_cell),
+            Paragraph("<code>/learning</code>", style_table_cell),
+            Paragraph("Curriculum across 5 modules, line-by-line breakdowns, code simulator, challenges.", style_table_cell)
+        ],
+        [
             Paragraph("Dataset Explorer", style_table_cell),
             Paragraph("<code>/explorer</code>", style_table_cell),
             Paragraph("CSV/JSON upload, schema preview, pagination, null/duplicate profiling.", style_table_cell)

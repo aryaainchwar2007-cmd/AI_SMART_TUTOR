@@ -17,10 +17,12 @@ import {
   GraduationCap,
   ChevronRight,
   ShieldCheck,
+  Code2,
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'Python Code Lab', path: '/learning', icon: Code2 },
   { name: 'Datasets', path: '/datasets', icon: Database },
   { name: 'Data Cleaning', path: '/cleaning', icon: Sparkles },
   { name: 'Visualization Lab', path: '/visualization', icon: BarChart3 },
@@ -32,6 +34,7 @@ const navItems = [
 ];
 
 const workflowSteps = [
+  { name: 'Learn Python', path: '/learning' },
   { name: 'Upload & Inspect', path: '/datasets' },
   { name: 'Clean Data', path: '/cleaning' },
   { name: 'Visualize', path: '/visualization' },

@@ -14,6 +14,7 @@ import { VisualizationLabPage } from './pages/VisualizationLabPage';
 import { StatisticsPage } from './pages/StatisticsPage';
 import { MLLabPage } from './pages/MLLabPage';
 import { AITutorPage } from './pages/AITutorPage';
+import { PythonLearningPage } from './pages/PythonLearningPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 
@@ -58,6 +59,7 @@ export const App: React.FC = () => {
               }
             >
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/learning" element={<PythonLearningPage />} />
               <Route path="/datasets" element={<DatasetExplorerPage />} />
               <Route path="/cleaning" element={<CleaningLabPage />} />
               <Route path="/visualization" element={<VisualizationLabPage />} />

@@ -13,6 +13,7 @@ import {
   BarChart3,
   CheckCircle,
   Clock,
+  Code2,
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -60,6 +61,13 @@ export const DashboardPage: React.FC = () => {
             >
               <Plus className="h-4 w-4" />
               <span>Upload Dataset</span>
+            </Link>
+            <Link
+              to="/learning"
+              className="inline-flex items-center space-x-2 bg-indigo-600/80 hover:bg-indigo-600 border border-white/20 text-white font-semibold px-4 py-2 rounded-xl text-sm transition"
+            >
+              <Code2 className="h-4 w-4" />
+              <span>Learn Python Code</span>
             </Link>
             <Link
               to="/tutor"
