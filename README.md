@@ -18,6 +18,7 @@ An end-to-end, production-grade educational web application engineered for unive
 ## 📑 Table of Contents
 
 - [Overview](#-overview)
+- [Official PCCOE Report Guidelines & Blueprint](#-official-pccoe-report-guidelines--blueprint)
 - [System Architecture](#-system-architecture)
 - [Key Features & Laboratories](#-key-features--laboratories)
 - [Technology Stack](#-technology-stack)
@@ -29,6 +30,21 @@ An end-to-end, production-grade educational web application engineered for unive
 - [Security & Privacy](#-security--privacy)
 - [API Reference](#-api-reference)
 - [Contributing & License](#-contributing--license)
+
+---
+
+## 📄 Official PCCOE Report Guidelines & Blueprint
+
+For B.Tech Computer Engineering students preparing their official **20–30 page DE&VL Mini-Project Report** according to **PCET's Pimpri Chinchwad College of Engineering (PCCOE)** departmental specifications, a dedicated guide and complete blueprint is available in:
+
+👉 **[`REPORT_README.md`](REPORT_README.md)**
+
+It contains:
+- **Typography & Layout Constraints:** Times New Roman, 12 pt, 1.5 line spacing, 5-space indentation, double space between paragraphs, exact A4 margins (Top: 23.4mm, Left: 37mm, Bottom: 32mm, Right: 23.4mm).
+- **Official Templates:** Verbatim Cover Page, Certificate, Acknowledgement, and Abstract.
+- **Table of Contents & Blueprint:** Complete chapters 01 to 07 matching the college syllabus with architecture diagrams, algorithms, and evaluation results.
+- **Turnitin / iThenticate Plagiarism Standards:** Official grading brackets (< 10% Excellent, < 40% maximum allowable).
+- **Ready-to-Compile LaTeX Template:** Complete `report.tex` template with pre-configured headers, footers, and margins.
 
 ---
 
