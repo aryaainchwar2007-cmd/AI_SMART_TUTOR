@@ -10,6 +10,9 @@ import {
   CheckCircle2,
   KeyRound,
   LogOut,
+  Zap,
+  Check,
+  ExternalLink,
 } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
@@ -21,6 +24,49 @@ export const SettingsPage: React.FC = () => {
   const [changing, setChanging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Gemini Key settings state
+  const [geminiKey, setGeminiKey] = useState('');
+  const [geminiModel, setGeminiModel] = useState('gemini-1.5-flash');
+  const [savingKey, setSavingKey] = useState(false);
+  const [providerStatus, setProviderStatus] = useState<any>(null);
+
+  React.useEffect(() => {
+    api.get<any>('/conversations/provider/status')
+      .then((data) => {
+        setProviderStatus(data);
+        if (data.model) setGeminiModel(data.model);
+      })
+      .catch(() => null);
+  }, []);
+
+  const handleGeminiKeyUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!geminiKey.trim()) return;
+    setSavingKey(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await api.post<any>('/conversations/provider/configure', {
+        api_key: geminiKey.trim(),
+        model: geminiModel,
+        provider: 'gemini',
+      });
+      setSuccess('Google Gemini AI activated successfully! AI Tutor is now live.');
+      setProviderStatus({
+        provider: res.provider,
+        model: res.model,
+        has_api_key: true,
+        masked_key: `${geminiKey.trim().slice(0, 4)}...${geminiKey.trim().slice(-4)}`,
+        is_live: true,
+      });
+      setGeminiKey('');
+    } catch (err: any) {
+      setError(err.message || 'Failed to update Gemini settings.');
+    } finally {
+      setSavingKey(false);
+    }
+  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,6 +209,81 @@ export const SettingsPage: React.FC = () => {
           >
             <Lock className="h-3.5 w-3.5" />
             <span>{changing ? 'Updating Security Credentials...' : 'Update Password'}</span>
+          </button>
+        </form>
+      </div>
+
+      {/* AI Tutor Provider Configuration Card */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-2">
+            <Zap className="h-4 w-4 text-blue-600" />
+            <span>AI Tutor Provider & Google Gemini Integration</span>
+          </h3>
+          <span
+            className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+              providerStatus?.is_live
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-800 border border-amber-200'
+            }`}
+          >
+            {providerStatus?.is_live ? `Live (${providerStatus.model})` : 'Offline Mock Mode'}
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-600 leading-relaxed">
+          The AI Tutor connects with Google Gemini to generate dynamic, Socratic explanations and customized code suggestions.
+          You can get a free API key from{' '}
+          <a
+            href="https://aistudio.google.com/app/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 font-bold hover:underline inline-flex items-center"
+          >
+            <span>Google AI Studio</span>
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </a>
+          .
+        </p>
+
+        <form onSubmit={handleGeminiKeyUpdate} className="space-y-4 max-w-lg">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Google Gemini API Key
+            </label>
+            <input
+              type="password"
+              placeholder={
+                providerStatus?.has_api_key
+                  ? `Active Key: ${providerStatus.masked_key}`
+                  : 'Paste AIzaSy... key'
+              }
+              value={geminiKey}
+              onChange={(e) => setGeminiKey(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Model Selection</label>
+            <select
+              value={geminiModel}
+              onChange={(e) => setGeminiModel(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800"
+            >
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast, Recommended)</option>
+              <option value="gemini-2.0-flash">Gemini 2.0 Flash (Next-Gen)</option>
+              <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Multi-turn)</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            disabled={savingKey || !geminiKey.trim()}
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-xl text-xs shadow-sm transition"
+          >
+            <Check className="h-3.5 w-3.5" />
+            <span>{savingKey ? 'Connecting...' : 'Save & Activate Gemini'}</span>
           </button>
         </form>
       </div>

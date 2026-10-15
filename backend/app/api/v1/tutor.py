@@ -12,9 +12,50 @@ from app.schemas.tutor import (
 )
 from app.services.tutor_service import TutorService
 from fastapi import APIRouter, Depends, Request, status
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/conversations", tags=["AI Tutor"])
+
+
+class ConfigureProviderRequest(BaseModel):
+    api_key: str = Field(..., min_length=5)
+    provider: str = Field(default="gemini")
+    model: str = Field(default="gemini-1.5-flash")
+
+
+@router.get("/provider/status")
+def get_provider_status(
+    current_user: User = Depends(get_current_user),
+):
+    key = settings.effective_api_key
+    masked_key = f"{key[:4]}...{key[-4:]}" if len(key) >= 8 else ("configured" if key else "")
+    return {
+        "provider": settings.effective_provider,
+        "model": settings.LLM_MODEL,
+        "has_api_key": bool(key),
+        "masked_key": masked_key,
+        "is_live": bool(key and settings.effective_provider != "mock"),
+    }
+
+
+@router.post("/provider/configure")
+def configure_provider(
+    req: ConfigureProviderRequest,
+    current_user: User = Depends(get_current_user),
+):
+    key = req.api_key.strip()
+    settings.LLM_API_KEY = key
+    settings.GEMINI_API_KEY = key
+    settings.LLM_PROVIDER = req.provider.strip().lower()
+    if req.model.strip():
+        settings.LLM_MODEL = req.model.strip()
+    return {
+        "message": "AI Provider configured successfully.",
+        "provider": settings.effective_provider,
+        "model": settings.LLM_MODEL,
+        "is_live": True,
+    }
 
 
 @router.post("", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)

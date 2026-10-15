@@ -117,14 +117,17 @@ class TutorService:
                 system_instruction=system_instruction,
                 messages=history,
             )
-        except Exception:
+        except Exception as e:
             # Fall back safely to offline tutor
             fallback = OfflineEducatorProvider()
             reply_text = await fallback.generate_response(
                 system_instruction=system_instruction,
                 messages=history,
             )
-            reply_text += "\n\n*(Note: Live external AI provider was unavailable; served via offline educational tutor.)*"
+            if settings.effective_api_key:
+                reply_text += f"\n\n*(Note: Live AI provider encountered an issue [{str(e)[:140]}]; served via offline educational tutor. Check your Gemini API key.)*"
+            else:
+                reply_text += "\n\n*(Note: Running in offline educational mode with static templates. Connect a free Google Gemini API key to unlock fully dynamic, generative AI tutoring!)*"
 
         # Save assistant message
         assistant_msg = Message(

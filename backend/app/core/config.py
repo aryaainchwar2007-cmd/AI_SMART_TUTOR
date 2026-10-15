@@ -61,9 +61,22 @@ class Settings(BaseSettings):
     # LLM Settings
     LLM_PROVIDER: str = "mock"  # "mock", "gemini", "openai", "ollama"
     LLM_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
     LLM_MODEL: str = "gemini-1.5-flash"
-    LLM_TIMEOUT_SECONDS: float = 25.0
+    LLM_TIMEOUT_SECONDS: float = 30.0
     LLM_MAX_RETRIES: int = 2
+
+    @property
+    def effective_api_key(self) -> str:
+        return (self.LLM_API_KEY or self.GEMINI_API_KEY or "").strip()
+
+    @property
+    def effective_provider(self) -> str:
+        key = self.effective_api_key
+        # Automatically promote to gemini if a key is provided and provider was default mock
+        if key and self.LLM_PROVIDER == "mock":
+            return "gemini"
+        return self.LLM_PROVIDER.lower()
 
 
 settings = Settings()
